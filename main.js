@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 
-const token = '744095282:AAEQBgM5Auc5EbL75VqB67P1_-4I4H1-IiA'; //Get a token from botfather from telegram search for botfather and create a new bot and get the token
+const token = ''; //Get a token from botfather from telegram search for botfather and create a new bot and get the token
 const bot = new TelegramBot(token, { polling: true });
 let userData = [];
 
