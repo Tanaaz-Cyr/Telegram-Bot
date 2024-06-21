@@ -6,7 +6,7 @@ let userData = [];
 
 
 //Check if the user is an admin
-async function checkAdmin(msg) {
+async function checkAdmin(msg, message_thread_id) {
   //Check person who sent the message is an admin
   try {
     if (msg.text.toString().toLowerCase().includes('/warn')) {
@@ -16,7 +16,7 @@ async function checkAdmin(msg) {
         //ignore
       }
       else {
-        bot.sendMessage(msg.chat.id, "You are do not have the permission to warn users. Only admins with right to kick can warn users.");
+        bot.sendMessage(msg.chat.id, "You are do not have the permission to warn users. Only admins with right to kick can warn users.",{message_thread_id});
         return;
       }
     }
@@ -46,12 +46,13 @@ async function getUserID(msg) {
 }
 
 //Check if rules was typed
-async function checkRules(msg) {
+async function checkRules(msg, message_thread_id) {
   if (msg.text === undefined) {
     return false;
   }
   if (msg.text.toString().toLowerCase().includes('#rules')) {
-    bot.sendMessage(msg.chat.id, "1. No spamming \r\n 2. No hate speech \r\n 3. No adult content \r\n 4. No sharing of personal information \r\n 5. No sharing of fake news \r\n 6. No sharing of inappropriate content \r\n 7. No sharing of copyrighted content");
+    bot.sendMessage(msg.chat.id, process.env.RULES ?? "Rules are not defined", {message_thread_id});
+    //bot.sendMessage(msg.chat.id, "1. No spamming \r\n 2. No hate speech \r\n 3. No adult content \r\n 4. No sharing of personal information \r\n 5. No sharing of fake news \r\n 6. No sharing of inappropriate content \r\n 7. No sharing of copyrighted content");
     return true;
   }
   return false;
@@ -74,7 +75,7 @@ async function isWarnedAdmin(msg, userId) {
   return false;
 }
 
-async function checkWarnedUser(msg, userId, userName) {
+async function checkWarnedUser(msg, userId, userName, message_thread_id) {
   //send a message to the group
   let warning;
   if (userData[userId] === undefined) {
@@ -96,42 +97,42 @@ async function checkWarnedUser(msg, userId, userName) {
   else if (userData[userId].Warns === 3) {
     warning = "third";
   }
-  bot.sendMessage(msg.chat.id, userName.first_name + " have been warned for violating the rules for the " + warning + " time. Please follow the rules to avoid being kicked from the group. \r\n Type #rules to see the rules.");
+  bot.sendMessage(msg.chat.id, userName.first_name + " have been warned for violating the rules for the " + warning + " time. Please follow the rules to avoid being kicked from the group. \r\n Type #rules to see the rules.",{message_thread_id});
   //if the user has been warned 3 times, kick the user
   if (userData[userId].Warns === 3) {
     //This will only kick the user out of the group
     await bot.banChatMember(msg.chat.id, userId);
     await bot.unbanChatMember(msg.chat.id, userId);
     userData[userId] = { Warns: 0 };
-    bot.sendMessage(msg.chat.id, "User " + userName.first_name + " has been kicked for violating the rules");
+    bot.sendMessage(msg.chat.id, "User " + userName.first_name + " has been kicked for violating the rules",{message_thread_id});
   }
 }
 
 bot.on('message', async (msg) => {
-
-  if (await checkRules(msg)) {
+  let message_thread_id = msg.message_thread_id;
+  if (await checkRules(msg, message_thread_id)) {
     return;
   }
 
-  await checkAdmin(msg);
+  await checkAdmin(msg, message_thread_id);
 
   try {
     if (msg.text.toString().toLowerCase().includes('/warn')) {
       const userId = await getUserID(msg);
       const isUserInGroup = await checkInGroup(msg, userId);
       if (isUserInGroup === undefined || isUserInGroup === null || isUserInGroup === "" || isUserInGroup === "left" || isUserInGroup === "kicked" || isUserInGroup === "member") {
-        bot.sendMessage(msg.chat.id, "User is not in the group");
+        bot.sendMessage(msg.chat.id, "User is not in the group", {message_thread_id});
         return;
       }
 
       if (await isWarnedAdmin(msg, userId)) {
-        bot.sendMessage(msg.chat.id, "You cannot warn an admin");
+        bot.sendMessage(msg.chat.id, "You cannot warn an admin",{message_thread_id});
         return;
       }
 
       //get the user name of the person to be warned
       let userName = await bot.getChat(userId);
-      await checkWarnedUser(msg, userId, userName);
+      await checkWarnedUser(msg, userId, userName, message_thread_id);
     }
   }
   catch {
