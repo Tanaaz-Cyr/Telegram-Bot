@@ -10,10 +10,10 @@ async function checkAdmin(msg, message_thread_id) {
   //Check person who sent the message is an admin
   try {
     if (msg.text.toString().toLowerCase().includes('/warn')) {
-      let isUserAdmin = await bot.getChatMember(msg.chat.id, msg.from.id);
+      let isUserAdmin = await bot.getChatMember(msg.chat.id, userId);
       console.log("isUserAdmin: " + isUserAdmin.status);
       if (isUserAdmin.status === "creator" || isUserAdmin.status === "administrator" && isUserAdmin.can_restrict_members === true) {
-        //ignore
+        
       }
       else {
         bot.sendMessage(msg.chat.id, "You are do not have the permission to warn users. Only admins with right to kick can warn users.",{message_thread_id});
@@ -70,6 +70,7 @@ async function isWarnedAdmin(msg, userId) {
   let isUserAdmin = await bot.getChatMember(msg.chat.id, userId);
   console.log("isUserAdmin (being warned): " + isUserAdmin.status);
   if (isUserAdmin.status === "creator" || isUserAdmin.status === "administrator" && isUserAdmin.can_restrict_members === true) {
+    console.log("Warned user is an admin");
     return true;
   }
   return false;
@@ -117,7 +118,7 @@ bot.on('message', async (msg) => {
   await checkAdmin(msg, message_thread_id);
 
   try {
-    if (msg.text.toString().toLowerCase().includes('/warn')) {
+    if (msg.text.toString().toLowerCase().includes('#warn')) {
       const userId = await getUserID(msg);
       const isUserInGroup = await checkInGroup(msg, userId);
       if (isUserInGroup === undefined || isUserInGroup === null || isUserInGroup === "" || isUserInGroup === "left" || isUserInGroup === "kicked" || isUserInGroup === "member") {
